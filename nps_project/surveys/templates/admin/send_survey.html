@@ -1,0 +1,18 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Enviar Formulário</h1>
+
+<form method="post">{% csrf_token %}
+    <p>Selecione o formulário a ser enviado:</p>
+    <select name="survey_id">
+        {% for survey in surveys %}
+            <option value="{{ survey.id }}">{{ survey.title }}</option>
+        {% endfor %}
+    </select>
+    <input type="hidden" name="respondent_ids" value="{{ respondents|join:"," }}">
+    <br><br>
+    <input type="submit" value="Enviar">
+</form>
+{% endblock %}

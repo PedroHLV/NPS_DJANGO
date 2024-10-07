@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ survey.title }}</h1>
+<p>{{ survey.description }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    {% for question in survey.questions.all %}
+        <div>
+            <label for="question_{{ question.id }}">{{ question.text }}</label><br>
+            <input type="text" name="question_{{ question.id }}" id="question_{{ question.id }}" required>
+        </div>
+        <br>
+    {% endfor %}
+    <input type="submit" value="Enviar">
+</form>
+{% endblock %}

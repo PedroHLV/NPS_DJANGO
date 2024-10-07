@@ -1,0 +1,46 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}{{ site_title }}{% endblock %}
+
+{% block content %}
+<h1>{{ site_header }}</h1>
+
+<div id="content-main">
+    <h2>Enviar Formulário</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    <form method="post" action="{% url 'admin:index' %}">
+        {% csrf_token %}
+        <div>
+            <label for="respondent">Selecione o Respondente:</label><br>
+            <select name="respondent_id" id="respondent" required>
+                {% for respondent in respondents %}
+                    <option value="{{ respondent.id }}">{{ respondent.name }} ({{ respondent.email }})</option>
+                {% empty %}
+                    <option disabled>Nenhum respondente cadastrado.</option>
+                {% endfor %}
+            </select>
+        </div>
+        <br>
+        <div>
+            <label for="survey">Selecione o Formulário:</label><br>
+            <select name="survey_id" id="survey" required>
+                {% for survey in surveys %}
+                    <option value="{{ survey.id }}">{{ survey.title }}</option>
+                {% empty %}
+                    <option disabled>Nenhum formulário disponível.</option>
+                {% endfor %}
+            </select>
+        </div>
+        <br>
+        <button type="submit">Enviar Formulário</button>
+    </form>
+    <br>
+    <!-- Restante do conteúdo -->
+</div>
+{% endblock %}
