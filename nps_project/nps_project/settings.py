@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-i(#9sl^$fs*hg2f7sd-a=g@)79dk4*tkajmtb4e#&3u*0*l)3e
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -41,7 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'surveys'
+    # 'surveys.apps.SurveysConfig',
+    'surveys',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -52,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'nps_project.urls'
@@ -59,7 +62,7 @@ ROOT_URLCONF = 'nps_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -138,3 +141,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 #URL do Frontend
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:8000')
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+]

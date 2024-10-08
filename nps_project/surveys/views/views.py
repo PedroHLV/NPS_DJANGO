@@ -6,13 +6,29 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 
-from ..serializer import SurveySerializer, RespondentSerializer, ResponseSerializer
+from ..serializer import SurveySerializer, RespondentSerializer, ResponseSerializer, AnswerSerializer, QuestionSerializer
 from ..models.surveys import Survey
 from ..models.answer import Answer
 from ..models.respondent import Respondent
 from ..models.response import Response
+from ..models.question import Question
 from ..utils.email_envio import send_survey_email
 from rest_framework.permissions import IsAdminUser
+
+class AnswerViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Answer.objects.all()
+    serializer_class = AnswerSerializer
+    # permission_classes = [IsAdminUser]
+
+class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Question.objects.all()
+    serializer_class = QuestionSerializer
+    # permission_classes = [IsAdminUser]
+
+class RespondentViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Respondent.objects.all()
+    serializer_class = RespondentSerializer
+    # permission_classes = [IsAdminUser]
 
 class SurveyViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Survey.objects.all()
@@ -49,17 +65,17 @@ class ResponseViewSet(viewsets.ModelViewSet):
         return DRFResponse(serializer.data, status=status.HTTP_201_CREATED)
     
 class SurveyResponseView(View):
-    def get(self, request, survey_id, respondent_email):
+    def get(self, request, survey_id, token):
         survey = get_object_or_404(Survey, pk=survey_id)
-        respondent = get_object_or_404(Respondent, email=respondent_email)
+        respondent = get_object_or_404(Respondent, token=token)
         # Verificar se o respondente já respondeu a este survey
         if Response.objects.filter(respondent=respondent, survey=survey).exists():
             return render(request, 'surveys/already_responded.html')
         return render(request, 'surveys/survey_form.html', {'survey': survey, 'respondent': respondent})
 
-    def post(self, request, survey_id, respondent_email):
+    def post(self, request, survey_id, token):
         survey = get_object_or_404(Survey, pk=survey_id)
-        respondent = get_object_or_404(Respondent, email=respondent_email)
+        respondent = get_object_or_404(Respondent, token=token)
         # Evitar múltiplas submissões
         if Response.objects.filter(respondent=respondent, survey=survey).exists():
             return render(request, 'surveys/already_responded.html')
@@ -68,4 +84,3 @@ class SurveyResponseView(View):
             answer_text = request.POST.get(f'question_{question.id}')
             Answer.objects.create(response=response, question=question, text=answer_text)
         return render(request, 'surveys/thank_you.html')
-

@@ -1,0 +1,28 @@
+<!-- base.html -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}NPS{% endblock %}</title>
+    <!-- Você pode adicionar links para CSS aqui -->
+</head>
+<body>
+    <header>
+        <!-- Cabeçalho do site -->
+        <h1>Bem-vindo ao NPS</h1>
+    </header>
+    
+    <main>
+        {% block content %}
+        <!-- Conteúdo específico da página será inserido aqui -->
+        {% endblock %}
+    </main>
+    
+    <footer>
+        <!-- Rodapé do site -->
+        <p>&copy; 2024 NPS</p>
+    </footer>
+    
+    <!-- Você pode adicionar scripts JavaScript aqui -->
+</body>
+</html>
