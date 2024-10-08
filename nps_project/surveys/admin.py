@@ -8,6 +8,7 @@ from django.template.response import TemplateResponse
 from .models.surveys import Survey
 from django.urls import path, include
 from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
 from .utils.email_envio import send_survey_email
 from django.contrib import messages, admin
 from django.shortcuts import render, redirect
@@ -16,18 +17,39 @@ class QuestionInline(admin.TabularInline):
     model = Question
     extra = 1
 
-
 class SurveyAdmin(admin.ModelAdmin):
     list_display = ('title', 'created_at')
     filter_horizontal = ('questions',)
+    ordering = ('-created_at',)
 
 
+class ResponseAdmin(admin.ModelAdmin):
+    list_display = ('respondent', 'survey', 'submitted_at')
+    readonly_fields = ['respondent', 'survey', 'submitted_at']
+    # inlines = [AnswerInline]
+
+    def has_add_permission(self, request):
+        return False
+    
+    def has_change_permission(self, request, obj = ...):
+        return False
+    
+class RespondentAdmin(admin.ModelAdmin):
+    list_display = ('email', 'name')
+    search_fields = ('email', 'name')
 class MyAdminSite(admin.AdminSite):
     site_header = 'Administração do Sistema NPS'
     site_title = 'Admin NPS'
     index_title = 'Bem-vindo ao Admin do Sistema NPS'
 
+    def has_permission(self, request):
+        return request.user.is_active and request.user.is_superuser
+
     def index(self, request, extra_context=None):
+        if not request.user.is_superuser:
+            messages.error(request, "Você não tem permissão para acessar esta página.")
+            return redirect('admin:login')
+
         if extra_context is None:
             extra_context = {}
 
@@ -72,6 +94,7 @@ class MyAdminSite(admin.AdminSite):
 
     
 admin_site = MyAdminSite()
+admin_site.register(User, UserAdmin)
 admin_site.register(Respondent)
 admin_site.register(Question)
 admin_site.register(Response)
