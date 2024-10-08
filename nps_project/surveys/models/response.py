@@ -8,4 +8,4 @@ class Response(models.Model):
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'Response by {self.respondent.email} to {self.survey.title}'
+        return f'O Formulário: {self.survey.title} foi respondido por: {self.respondent.email}'
