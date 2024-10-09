@@ -4,6 +4,7 @@ from .models.question import Question
 from .models.respondent import Respondent
 from .models.response import Response
 from .models.surveys import Survey
+from .models.invitation import Invitation
 from django.template.response import TemplateResponse
 from .models.surveys import Survey
 from django.urls import path, include

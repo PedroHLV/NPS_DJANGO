@@ -12,6 +12,7 @@ from ..models.answer import Answer
 from ..models.respondent import Respondent
 from ..models.response import Response
 from ..models.question import Question
+from ..models.invitation import Invitation
 from ..utils.email_envio import send_survey_email
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 
@@ -19,7 +20,6 @@ class AnswerViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
     permission_classes = [IsAuthenticated]
-
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
@@ -41,7 +41,6 @@ class SurveyViewSet(viewsets.ReadOnlyModelViewSet):
         for respondent in respondents:
             send_survey_email(survey, respondent)
         return DRFResponse({'status': 'email sent'})
-
 class ResponseViewSet(viewsets.ModelViewSet):
     queryset = Response.objects.all()
     serializer_class = ResponseSerializer
@@ -62,24 +61,45 @@ class ResponseViewSet(viewsets.ModelViewSet):
             )
         serializer = self.get_serializer(response)
         return DRFResponse(serializer.data, status=status.HTTP_201_CREATED)
-    
 class SurveyResponseView(View):
     def get(self, request, survey_id, token):
         survey = get_object_or_404(Survey, pk=survey_id)
-        respondent = get_object_or_404(Respondent, token=token)
-        # Verificar se o respondente já respondeu a este survey
-        if Response.objects.filter(respondent=respondent, survey=survey).exists():
+        invitation = get_object_or_404(Invitation, token=token, survey=survey)
+        respondent = invitation.respondent
+        
+        # Verificar se já existe uma resposta para esta invitation
+        if hasattr(invitation, 'response'):
             return render(request, 'surveys/already_responded.html')
-        return render(request, 'surveys/survey_form.html', {'survey': survey, 'respondent': respondent})
+        
+        return render(request, 'surveys/survey_form.html', {
+            'survey': survey,
+            'respondent': respondent,
+            'invitation': invitation
+        })
 
     def post(self, request, survey_id, token):
         survey = get_object_or_404(Survey, pk=survey_id)
-        respondent = get_object_or_404(Respondent, token=token)
-        # Evitar múltiplas submissões
-        if Response.objects.filter(respondent=respondent, survey=survey).exists():
+        invitation = get_object_or_404(Invitation, token=token, survey=survey)
+        respondent = invitation.respondent
+        
+        # Evitar múltiplas submissões para a mesma invitation
+        if hasattr(invitation, 'response'):
             return render(request, 'surveys/already_responded.html')
-        response = Response.objects.create(respondent=respondent, survey=survey)
+        
+        # Criar a Response
+        response = Response.objects.create(
+            respondent=respondent,
+            survey=survey,
+            invitation=invitation
+        )
+        
+        # Salvar as respostas das perguntas
         for question in survey.questions.all():
             answer_text = request.POST.get(f'question_{question.id}')
-            Answer.objects.create(response=response, question=question, text=answer_text)
+            Answer.objects.create(
+                response=response,
+                question=question,
+                text=answer_text
+            )
+        
         return render(request, 'surveys/thank_you.html')
