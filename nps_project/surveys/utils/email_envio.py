@@ -3,6 +3,8 @@ from django.urls import reverse
 from django.conf import settings
 from urllib.parse import urljoin
 from ..models.invitation import Invitation
+from django.core.mail import EmailMultiAlternatives
+
 
 def send_survey_email(survey, respondent):
     # Criar uma nova instância de Invitation
@@ -18,9 +20,17 @@ def send_survey_email(survey, respondent):
     # Mensagem do e-mail
     message = (
         f"Olá {respondent.name or respondent.email},\n\n"
-        f"Por favor, participe da nossa pesquisa:\n{survey_url}\n\n"
-        f"Obrigado!"
+        f"Esperamos que esteja bem!\n\n"
+        f"Estamos realizando uma pesquisa para melhorar nossos serviços e gostaríamos muito de contar com a sua participação.\n\n"
+        f"A sua opinião é extremamente valiosa para nós e nos ajudará a entender melhor suas necessidades e expectativas.\n\n"
+        f"Para participar, clique no link abaixo:\n"
+        f"{survey_url}\n\n"
+        f"Este formulário permanecerá disponível por tempo limitado, então não perca a oportunidade de contribuir.\n\n"
+        f"Agradecemos antecipadamente pela sua colaboração!\n\n"
+        f"Atenciosamente,\n"
+        f"Sua Empresa/Equipe"
     )
+
     
     # Enviar o e-mail
     send_mail(
@@ -28,5 +38,5 @@ def send_survey_email(survey, respondent):
         message,
         settings.DEFAULT_FROM_EMAIL,
         [respondent.email],
-        fail_silently=False,  # Defina como True se não quiser que exceções sejam levantadas
+        fail_silently=False,
     )
