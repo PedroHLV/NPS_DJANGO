@@ -17,7 +17,7 @@ class QuestionInline(admin.TabularInline):
     model = Question
     extra = 1
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ('response', 'get_survey', 'question', 'text')
+    list_display = ('__str__', 'get_survey', 'question', 'text')
     readonly_fields = ('response', 'question', 'text')
     actions = None
 
@@ -63,40 +63,57 @@ class MyAdminSite(admin.AdminSite):
     site_title = 'Admin NPS'
     index_title = 'Bem-vindo ao Admin do Sistema NPS'
 
-    def has_permission(self, request):
-        return request.user.is_active and request.user.is_superuser
-
     def index(self, request, extra_context=None):
-        if not request.user.is_superuser:
-            messages.error(request, "Você não tem permissão para acessar esta página.")
-            return redirect('admin:login')
-
         if extra_context is None:
             extra_context = {}
 
-        # Processar o POST do formulário de envio
+        # Verificar se o usuário é superusuário
         if request.method == 'POST':
-            respondent_id = request.POST.get('respondent_id')
+            if not request.user.is_superuser:
+                messages.error(request, "Você não tem permissão para enviar formulários.")
+                return redirect('admin:index')
+
+            # Processar o POST do formulário de envio
+            respondent_ids = request.POST.getlist('respondent_ids[]')
             survey_id = request.POST.get('survey_id')
 
             # Validar os IDs
-            if not respondent_id or not survey_id:
+            if not respondent_ids or not survey_id:
                 messages.error(request, "Respondente ou Formulário não selecionado.")
                 return redirect('admin:index')
 
             try:
-                respondent = Respondent.objects.get(id=respondent_id)
+                respondents = Respondent.objects.filter(id__in=respondent_ids)
                 survey = Survey.objects.get(id=survey_id)
-            except (Respondent.DoesNotExist, Survey.DoesNotExist):
-                messages.error(request, "Respondente ou Formulário inválido.")
+            except Survey.DoesNotExist:
+                messages.error(request, "Formulário inválido.")
+                return redirect('admin:index')
+            
+            # Verificar se existem respondentes válidos
+            if not respondents.exists():
+                messages.error(request, "Nenhum respondente válido selecionado.")
                 return redirect('admin:index')
 
-            # Enviar o e-mail
-            try:
-                send_survey_email(survey, respondent)
-                messages.success(request, f"Formulário '{survey.title}' enviado para '{respondent.email}'.")
-            except Exception as e:
-                messages.error(request, f"Ocorreu um erro ao enviar o e-mail: {e}")
+            # Enviar os e-mails
+            success_emails = []
+            error_emails = []
+            for respondent in respondents:
+                try:
+                    send_survey_email(survey, respondent)
+                    success_emails.append(respondent.email)
+                except Exception as e:
+                    error_emails.append((respondent.email, str(e)))
+
+            # Consolidar as mensagens de sucesso
+            if success_emails:
+                emails_str = "', '".join(success_emails)
+                messages.success(request, f"Formulário '{survey.title}' enviado para '{emails_str}'.")
+
+            # Exibir mensagens de erro individuais
+            if error_emails:
+                for email, error in error_emails:
+                    messages.error(request, f"Ocorreu um erro ao enviar o e-mail para '{email}': {error}")
+
             return redirect('admin:index')
 
         # Para requisições GET, renderizar a página normalmente

@@ -2,11 +2,47 @@
 
 {% block title %}{{ site_title }}{% endblock %}
 
+{% block extrahead %}
+    {{ block.super }}
+    <!-- Incluindo o CSS do Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Estilos personalizados -->
+    <style>
+        .form-container {
+            width: 50%;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .form-container form {
+            display: inline-block;
+            text-align: left;
+            width: 100%;
+        }
+        .form-container label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-container select {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .form-container button {
+            margin-top: 10px;
+        }
+        .alert {
+            width: 50%;
+            margin: 0 auto 15px auto;
+            text-align: center;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
-<h1>{{ site_header }}</h1>
+<h1 style="text-align:center;">{{ site_header }}</h1>
 
 <div id="content-main">
-    <h2>Enviar Formulário</h2>
+    <h2 style="text-align:center;">Enviar Formulário</h2>
     {% if messages %}
         {% for message in messages %}
             <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
@@ -14,33 +50,56 @@
             </div>
         {% endfor %}
     {% endif %}
-    <form method="post" action="{% url 'admin:index' %}">
-        {% csrf_token %}
-        <div>
-            <label for="respondent">Selecione o Respondente:</label><br>
-            <select name="respondent_id" id="respondent" required>
-                {% for respondent in respondents %}
-                    <option value="{{ respondent.id }}">{{ respondent.name }} ({{ respondent.email }})</option>
-                {% empty %}
-                    <option disabled>Nenhum respondente cadastrado.</option>
-                {% endfor %}
-            </select>
+    {% if user.is_superuser %}
+        <div class="form-container">
+            <form method="post" action="{% url 'admin:index' %}">
+                {% csrf_token %}
+                <div>
+                    <label for="respondent">Selecione os Respondentes:</label>
+                    <select name="respondent_ids[]" id="respondent" multiple required>
+                        {% for respondent in respondents %}
+                            <option value="{{ respondent.id }}">{{ respondent.name }} ({{ respondent.email }})</option>
+                        {% empty %}
+                            <option disabled>Nenhum respondente cadastrado.</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="survey">Selecione o Formulário:</label>
+                    <select name="survey_id" id="survey" required>
+                        {% for survey in surveys %}
+                            <option value="{{ survey.id }}">{{ survey.title }}</option>
+                        {% empty %}
+                            <option disabled>Nenhum formulário disponível.</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="text-align: center;">
+                    <button type="submit">Enviar Formulário</button>
+                </div>
+            </form>
         </div>
-        <br>
-        <div>
-            <label for="survey">Selecione o Formulário:</label><br>
-            <select name="survey_id" id="survey" required>
-                {% for survey in surveys %}
-                    <option value="{{ survey.id }}">{{ survey.title }}</option>
-                {% empty %}
-                    <option disabled>Nenhum formulário disponível.</option>
-                {% endfor %}
-            </select>
-        </div>
-        <br>
-        <button type="submit">Enviar Formulário</button>
-    </form>
+        <!-- Incluindo o JS do Select2 -->
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+        <script type="text/javascript">
+            (function($) {
+                $(document).ready(function() {
+                    $('#respondent').select2({
+                        placeholder: 'Selecione os Respondentes',
+                        allowClear: true,
+                        width: '100%',
+                        closeOnSelect: false,
+                        tags: true,
+                        createTag: function() {
+                            return null;
+                        }
+                    });
+                });
+            })(django.jQuery);
+        </script>
+    {% else %}
+        <p>Você não tem permissão para enviar formulários.</p>
+    {% endif %}
     <br>
-    <!-- Restante do conteúdo -->
 </div>
 {% endblock %}
