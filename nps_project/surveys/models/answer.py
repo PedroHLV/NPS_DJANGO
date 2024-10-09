@@ -8,4 +8,4 @@ class Answer(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return f'Resposta da questão: {self.question.text}, vinculada ao Formulário: {self.response.survey.title}'
+        return f'(Respondido por: {self.response.respondent.name}) / Resposta da questão: {self.question.text}, vinculada ao Formulário: {self.response.survey.title}'

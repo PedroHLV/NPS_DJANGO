@@ -16,13 +16,35 @@ from django.shortcuts import render, redirect
 class QuestionInline(admin.TabularInline):
     model = Question
     extra = 1
+class AnswerAdmin(admin.ModelAdmin):
+    list_display = ('response', 'get_survey', 'question', 'text')
+    readonly_fields = ('response', 'question', 'text')
+    actions = None
 
+    def get_survey(self, obj):
+        return obj.response.survey.title
+    get_survey.short_description = 'Formulário'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return [field.name for field in obj._meta.fields]
+        return self.readonly_fields
+
+    def get_actions(self, request):
+        return []
 class SurveyAdmin(admin.ModelAdmin):
-    list_display = ('title', 'created_at')
+    list_display = ('title', 'description', 'created_at')
     filter_horizontal = ('questions',)
     ordering = ('-created_at',)
-
-
 class ResponseAdmin(admin.ModelAdmin):
     list_display = ('respondent', 'survey', 'submitted_at')
     readonly_fields = ['respondent', 'survey', 'submitted_at']
@@ -33,9 +55,8 @@ class ResponseAdmin(admin.ModelAdmin):
     
     def has_change_permission(self, request, obj = ...):
         return False
-    
 class RespondentAdmin(admin.ModelAdmin):
-    list_display = ('email', 'name')
+    list_display = ( 'name','email')
     search_fields = ('email', 'name')
 class MyAdminSite(admin.AdminSite):
     site_header = 'Administração do Sistema NPS'
@@ -90,13 +111,10 @@ class MyAdminSite(admin.AdminSite):
         }
         return TemplateResponse(request, 'admin/custom_index.html', context)
 
-
-
-    
 admin_site = MyAdminSite()
 admin_site.register(User, UserAdmin)
-admin_site.register(Respondent)
-admin_site.register(Question)
-admin_site.register(Response)
-admin_site.register(Answer)
+admin_site.register(Respondent, RespondentAdmin)
+admin_site.register(Response, ResponseAdmin)
+admin_site.register(Answer, AnswerAdmin)
 admin_site.register(Survey, SurveyAdmin)
+admin_site.register(Question)

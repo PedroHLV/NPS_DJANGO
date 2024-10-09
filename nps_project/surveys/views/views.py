@@ -13,27 +13,25 @@ from ..models.respondent import Respondent
 from ..models.response import Response
 from ..models.question import Question
 from ..utils.email_envio import send_survey_email
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 
 class AnswerViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
-    # permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
-    # permission_classes = [IsAdminUser]
-
+    permission_classes = [IsAuthenticated]
 class RespondentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Respondent.objects.all()
     serializer_class = RespondentSerializer
-    # permission_classes = [IsAdminUser]
-
+    permission_classes = [IsAuthenticated]
 class SurveyViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Survey.objects.all()
     serializer_class = SurveySerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def send(self, request, pk=None):
@@ -47,6 +45,7 @@ class SurveyViewSet(viewsets.ReadOnlyModelViewSet):
 class ResponseViewSet(viewsets.ModelViewSet):
     queryset = Response.objects.all()
     serializer_class = ResponseSerializer
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         respondent_data = request.data.get('respondent')
