@@ -17,8 +17,14 @@ from django.shortcuts import render, redirect
 class QuestionInline(admin.TabularInline):
     model = Question
     extra = 1
+    fields = ('text', 'question_type')
+    show_change_link = True
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ('text', 'question_type')
+    # list_filter = ('question_type')
+    search_fields = ('text',)
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'get_survey', 'question', 'text')
+    list_display = ('__str__', 'get_survey', 'question')
     readonly_fields = ('response', 'question', 'text')
     actions = None
 
@@ -44,8 +50,8 @@ class AnswerAdmin(admin.ModelAdmin):
         return []
 class SurveyAdmin(admin.ModelAdmin):
     list_display = ('title', 'description', 'created_at')
+    # search_fields = ('title')
     filter_horizontal = ('questions',)
-    ordering = ('-created_at',)
 class ResponseAdmin(admin.ModelAdmin):
     list_display = ('respondent', 'survey', 'submitted_at')
     readonly_fields = ['respondent', 'survey', 'submitted_at']
@@ -135,4 +141,4 @@ admin_site.register(Respondent, RespondentAdmin)
 admin_site.register(Response, ResponseAdmin)
 admin_site.register(Answer, AnswerAdmin)
 admin_site.register(Survey, SurveyAdmin)
-admin_site.register(Question)
+admin_site.register(Question, QuestionAdmin)

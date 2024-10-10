@@ -93,13 +93,28 @@ class SurveyResponseView(View):
             invitation=invitation
         )
         
-        # Salvar as respostas das perguntas
+         # Salvar as respostas das perguntas
         for question in survey.questions.all():
-            answer_text = request.POST.get(f'question_{question.id}')
-            Answer.objects.create(
-                response=response,
-                question=question,
-                text=answer_text
-            )
-        
+            if question.question_type == 'text':
+                answer_text = request.POST.get(f'question_{question.id}')
+                Answer.objects.create(
+                    response=response,
+                    question=question,
+                    text=answer_text
+                )
+            elif question.question_type == 'yes_no':
+                answer_choice = request.POST.get(f'question_{question.id}')
+                Answer.objects.create(
+                    response=response,
+                    question=question,
+                    choice=answer_choice
+                )
+            elif question.question_type == 'rating':
+                answer_rating = request.POST.get(f'question_{question.id}')
+                Answer.objects.create(
+                    response=response,
+                    question=question,
+                    rating=answer_rating
+                )
+
         return render(request, 'surveys/thank_you.html')

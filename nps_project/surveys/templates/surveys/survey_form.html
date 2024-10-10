@@ -1,18 +1,118 @@
-{% extends "base.html" %}
+<!-- templates/surveys/survey_form.html -->
 
-{% block content %}
-<h1>{{ survey.title }}</h1>
-<p>{{ survey.description }}</p>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ survey.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .survey-container {
+            background-color: #ffffff;
+            padding: 30px;
+            margin: 0 auto;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .question h3 {
+            margin-bottom: 10px;
+        }
+        .rating-buttons button {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #e0e0e0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .rating-buttons button.selected {
+            background-color: #28a745;
+            color: #ffffff;
+        }
+        .rating-buttons button:hover {
+            background-color: #d5d5d5;
+        }
+        .submit-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="survey-container">
+        <h1>{{ survey.title }}</h1>
+        <form method="post">
+            {% csrf_token %}
+            {% for question in survey.questions.all %}
+                <div class="question">
+                    <h3>{{ forloop.counter }}. {{ question.text }}</h3>
+                    {% if question.question_type == 'text' %}
+                        <textarea name="question_{{ question.id }}" rows="4" style="width: 100%;" required></textarea>
+                    {% elif question.question_type == 'yes_no' %}
+                        <label>
+                            <input type="radio" name="question_{{ question.id }}" value="Sim" required> Sim
+                        </label>
+                        <label style="margin-left: 20px;">
+                            <input type="radio" name="question_{{ question.id }}" value="Não" required> Não
+                        </label>
+                    {% elif question.question_type == 'rating' %}
+                        <div class="rating-buttons" id="rating_buttons_{{ question.id }}">
+                            {% for _ in "||||||||||" %}
+                                <button type="button" onclick="selectRating({{ question.id }}, {{ forloop.counter }})" id="rating_{{ question.id }}_{{ forloop.counter }}" aria-pressed="false">{{ forloop.counter }}</button>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="question_{{ question.id }}" id="rating_input_{{ question.id }}" required>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="submit-button">Enviar Respostas</button>
+        </form>
+    </div>
 
-<form method="post">
-    {% csrf_token %}
-    {% for question in survey.questions.all %}
-        <div>
-            <label for="question_{{ question.id }}">{{ question.text }}</label><br>
-            <input type="text" name="question_{{ question.id }}" id="question_{{ question.id }}" required>
-        </div>
-        <br>
-    {% endfor %}
-    <input type="submit" value="Enviar">
-</form>
-{% endblock %}
+    <script>
+        function selectRating(questionId, rating) {
+            const selectedButton = document.getElementById(`rating_${questionId}_${rating}`);
+            const hiddenInput = document.getElementById(`rating_input_${questionId}`);
+
+            // Verificar se o botão já está selecionado
+            if (selectedButton.classList.contains('selected')) {
+                // Se já estiver selecionado, desmarcar
+                selectedButton.classList.remove('selected');
+                selectedButton.setAttribute('aria-pressed', 'false');
+                hiddenInput.value = '';
+            } else {
+                // Se não estiver selecionado, selecionar e desmarcar outros
+                const buttons = document.querySelectorAll(`#rating_buttons_${questionId} button`);
+                buttons.forEach(button => {
+                    button.classList.remove('selected');
+                    button.setAttribute('aria-pressed', 'false');
+                });
+                selectedButton.classList.add('selected');
+                selectedButton.setAttribute('aria-pressed', 'true');
+                hiddenInput.value = rating;
+            }
+        }
+    </script>
+</body>
+</html>
