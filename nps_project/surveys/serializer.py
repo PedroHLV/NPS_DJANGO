@@ -8,7 +8,7 @@ from .models.surveys import Survey
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        fields = ['id', 'text']
+        fields = ['id', 'text', 'question_type']
 
 class SurveySerializer(serializers.ModelSerializer):
     questions = serializers.PrimaryKeyRelatedField(queryset=Question.objects.all(), many=True)
@@ -27,7 +27,7 @@ class AnswerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Answer
-        fields = ['question', 'text']
+        fields = ['question', 'text', 'choice', 'rating']
 
 class ResponseSerializer(serializers.ModelSerializer):
     answers = AnswerSerializer(many=True)
